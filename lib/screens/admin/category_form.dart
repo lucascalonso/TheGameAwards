@@ -7,7 +7,7 @@ class CategoryForm extends StatefulWidget {
   final Map<String, dynamic>?
   category; // Nulo se for criação, preenchido se for edição
 
-  CategoryForm({this.category});
+  const CategoryForm({super.key, this.category});
 
   @override
   _CategoryFormState createState() => _CategoryFormState();
@@ -29,7 +29,7 @@ class _CategoryFormState extends State<CategoryForm> {
   }
 
   // Carrega a lista de todos os jogos e os jogos já associados a esta categoria
-  _loadData() async {
+  Future<void> _loadData() async {
     final db = await DbHelper().database;
 
     // Busca todos os jogos disponíveis no sistema
@@ -57,7 +57,7 @@ class _CategoryFormState extends State<CategoryForm> {
     });
   }
 
-  _saveCategory() async {
+  Future<void> _saveCategory() async {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -158,7 +158,7 @@ class _CategoryFormState extends State<CategoryForm> {
                   });
                 },
               );
-            }).toList(),
+            }),
             if (_allGames.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(8.0),

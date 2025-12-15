@@ -8,6 +8,8 @@ import 'category_detail.dart';
 import 'search_screen.dart'; // Para o botão de busca com filtros
 
 class UserDashboard extends StatefulWidget {
+  const UserDashboard({super.key});
+
   @override
   _UserDashboardState createState() => _UserDashboardState();
 }

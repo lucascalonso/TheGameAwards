@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 
 class AdminDashboard extends StatelessWidget {
+  const AdminDashboard({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

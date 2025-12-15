@@ -6,7 +6,7 @@ import '../../models/genre_model.dart';
 
 class GameForm extends StatefulWidget {
   final Map<String, dynamic>? game; // Nulo para novo, preenchido para edição
-  GameForm({this.game});
+  const GameForm({super.key, this.game});
 
   @override
   _GameFormState createState() => _GameFormState();
@@ -18,7 +18,7 @@ class _GameFormState extends State<GameForm> {
   final _descController = TextEditingController();
   final _dateController = TextEditingController();
   List<Genre> _allGenres = [];
-  List<int> _selectedGenres = [];
+  final List<int> _selectedGenres = [];
 
   @override
   void initState() {
@@ -31,13 +31,13 @@ class _GameFormState extends State<GameForm> {
     }
   }
 
-  _loadGenres() async {
+  Future<void> _loadGenres() async {
     final db = await DbHelper().database;
     final res = await db.query('genre');
     setState(() => _allGenres = res.map((m) => Genre.fromMap(m)).toList());
   }
 
-  _saveGame() async {
+  Future<void> _saveGame() async {
     if (!_formKey.currentState!.validate()) return;
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final db = await DbHelper().database;

@@ -3,6 +3,8 @@ import '../../database/db_helper.dart';
 import '../../models/user_model.dart';
 
 class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }

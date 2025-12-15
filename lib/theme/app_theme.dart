@@ -21,7 +21,6 @@ class AppTheme {
         primary: gold,
         secondary: gold,
         surface: surfaceColor,
-        background: darkBackground,
         onPrimary: Colors.black,
       ),
 

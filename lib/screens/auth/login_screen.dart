@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../database/db_helper.dart';
 import '../../providers/auth_provider.dart';
-import '../../models/user_model.dart';
-import 'register_screen.dart'; // Import necessário
-import '../user/user_dashboard.dart'; // Import necessário
-import '../admin/admin_dashboard.dart'; // Import necessário
+import 'register_screen.dart';
+// Os imports de dashboard e DbHelper não são mais necessários aqui
+// pois o main.dart gerencia a troca de tela e o Provider gerencia o banco.
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -15,40 +15,41 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false; // Para mostrar um feedback visual
 
   void _handleLogin() async {
+    // Validação básica
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Preencha email e senha"), backgroundColor: Colors.orange),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
-    // Tenta buscar o usuário no banco
-    var userMap = await DbHelper().login(
+    // 1. A tela pede ao Provider para tentar logar passando strings
+    bool success = await auth.login(
       _emailController.text,
       _passwordController.text,
     );
 
-    if (userMap != null) {
-      User user = User.fromMap(userMap);
-      auth.login(user); // Atualiza o estado global para logado
+    setState(() => _isLoading = false);
 
-      // A navegação automática acontece no main.dart via Consumer,
-      // mas se você preferir forçar aqui:
-      if (user.role == 0) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => AdminDashboard()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => UserDashboard()),
+    // 2. Se falhar, mostramos erro.
+    // Se tiver sucesso, NÃO precisamos fazer nada, pois o main.dart
+    // vai detectar a mudança de estado (auth.user != null) e trocar a tela automaticamente.
+    if (!success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Email ou senha incorretos"),
+            backgroundColor: Colors.red,
+          ),
         );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Email ou senha incorretos"),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
@@ -73,6 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: "Email"),
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 15),
               TextField(
@@ -82,18 +84,20 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Botão Entrar
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
-                ),
-                onPressed: _handleLogin,
-                child: const Text("ENTRAR"),
-              ),
+              // Botão Entrar com Loading
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      onPressed: _handleLogin,
+                      child: const Text("ENTRAR"),
+                    ),
 
               const SizedBox(height: 20),
 
-              // Botão Cadastrar - AGORA FUNCIONAL
+              // Botão Cadastrar
               TextButton(
                 onPressed: () {
                   Navigator.push(
@@ -107,14 +111,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
 
-              // Botão Continuar sem Cadastro - AGORA FUNCIONAL
+              // Botão Continuar sem Cadastro
               TextButton(
                 onPressed: () {
-                  auth.loginAsGuest(); // Define o estado como convidado
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => UserDashboard()),
-                  );
+                  auth.loginAsGuest();
+                  // Novamente: main.dart cuidará da navegação
                 },
                 child: const Text(
                   "Continuar sem cadastro",

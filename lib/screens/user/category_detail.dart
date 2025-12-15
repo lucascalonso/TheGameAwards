@@ -6,7 +6,7 @@ import '../../providers/auth_provider.dart';
 class CategoryDetail extends StatefulWidget {
   final int categoryId;
   final String categoryTitle;
-  CategoryDetail({required this.categoryId, required this.categoryTitle});
+  const CategoryDetail({super.key, required this.categoryId, required this.categoryTitle});
 
   @override
   _CategoryDetailState createState() => _CategoryDetailState();
@@ -22,7 +22,7 @@ class _CategoryDetailState extends State<CategoryDetail> {
     _loadData();
   }
 
-  _loadData() async {
+  Future<void> _loadData() async {
     final db = await DbHelper().database;
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
@@ -53,7 +53,7 @@ class _CategoryDetailState extends State<CategoryDetail> {
     setState(() => _games = gamesRes);
   }
 
-  _handleVote(int gameId) async {
+  Future<void> _handleVote(int gameId) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     if (auth.isGuest) return;
 
