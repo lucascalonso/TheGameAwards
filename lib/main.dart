@@ -1,10 +1,9 @@
-// Necessário para verificar o Sistema Operacional
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart'; // Necessário para o banco
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'providers/auth_provider.dart';
-import 'theme/app_theme.dart'; 
+import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/admin/admin_dashboard.dart';
 import 'screens/user/user_dashboard.dart';

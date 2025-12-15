@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../database/db_helper.dart';
 import '../../models/user_model.dart';
+import '../../widgets/base_layout.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -30,7 +31,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseLayout(
       appBar: AppBar(title: Text("Cadastro de Usuário")),
       body: Padding(
         padding: EdgeInsets.all(16),

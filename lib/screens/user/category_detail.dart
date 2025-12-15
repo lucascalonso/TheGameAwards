@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../database/db_helper.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/base_layout.dart';
 
 class CategoryDetail extends StatefulWidget {
   final int categoryId;
   final String categoryTitle;
-  const CategoryDetail({super.key, required this.categoryId, required this.categoryTitle});
+  const CategoryDetail({
+    super.key,
+    required this.categoryId,
+    required this.categoryTitle,
+  });
 
   @override
   _CategoryDetailState createState() => _CategoryDetailState();
@@ -90,7 +95,7 @@ class _CategoryDetailState extends State<CategoryDetail> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    return Scaffold(
+    return BaseLayout(
       appBar: AppBar(title: Text(widget.categoryTitle)),
       body: ListView.builder(
         itemCount: _games.length,

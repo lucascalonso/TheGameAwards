@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../database/db_helper.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/base_layout.dart';
 
 class CategoryForm extends StatefulWidget {
   final Map<String, dynamic>?
@@ -106,7 +107,7 @@ class _CategoryFormState extends State<CategoryForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseLayout(
       appBar: AppBar(
         title: Text(
           widget.category == null ? "Nova Categoria" : "Editar Categoria",

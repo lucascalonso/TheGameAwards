@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../database/db_helper.dart';
+import '../../widgets/base_layout.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -9,93 +10,134 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  int? _selectedGenreId;
+  final DbHelper _dbHelper = DbHelper();
+
+  List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _genres = [];
+  List<Map<String, dynamic>> _searchResults = [];
+
   int? _selectedCategoryId;
-  int? _selectedRank;
-  List<Map<String, dynamic>> _results = [];
+  int? _selectedGenreId;
+  int? _selectedPosition; // 1, 2, 3
+
+  bool _hasSearched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFilters();
+  }
+
+  Future<void> _loadFilters() async {
+    final cats = await _dbHelper.getAllCategories();
+    final gens = await _dbHelper.getAllGenres();
+    setState(() {
+      _categories = cats;
+      _genres = gens;
+    });
+  }
 
   Future<void> _performSearch() async {
-    final db = await DbHelper().database;
-
-    // Query complexa para calcular ranking e filtrar
-    String query = '''
-      SELECT g.name as game_name, c.title as cat_title, COUNT(v.id) as votes,
-      RANK() OVER (PARTITION BY c.id ORDER BY COUNT(v.id) DESC) as position
-      FROM game g
-      JOIN category_game cg ON g.id = cg.game_id
-      JOIN category c ON cg.category_id = c.id
-      LEFT JOIN user_vote v ON g.id = v.vote_game_id AND c.id = v.category_id
-      LEFT JOIN game_genre gg ON g.id = gg.game_id
-      WHERE 1=1
-    ''';
-
-    List<dynamic> args = [];
-    if (_selectedCategoryId != null) {
-      query += " AND c.id = ?";
-      args.add(_selectedCategoryId);
-    }
-    if (_selectedGenreId != null) {
-      query += " AND gg.genre_id = ?";
-      args.add(_selectedGenreId);
-    }
-
-    query += " GROUP BY g.id, c.id";
-
-    if (_selectedRank != null) {
-      query = "SELECT * FROM ($query) WHERE position = ?";
-      args.add(_selectedRank);
-    }
-
-    final res = await db.rawQuery(query, args);
-    setState(() => _results = res);
+    final results = await _dbHelper.searchGames(
+      categoryId: _selectedCategoryId,
+      genreId: _selectedGenreId,
+      position: _selectedPosition,
+    );
+    setState(() {
+      _searchResults = results;
+      _hasSearched = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Pesquisa e Ranking")),
+    return BaseLayout(
+      appBar: AppBar(title: const Text("Buscar Jogos")),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
               children: [
-                Expanded(
-                  child: DropdownButton<int>(
-                    hint: Text("Posição"),
-                    value: _selectedRank,
-                    items: [1, 2, 3]
-                        .map(
-                          (r) => DropdownMenuItem(
-                            value: r,
-                            child: Text("$rº Lugar"),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (val) => setState(() => _selectedRank = val),
-                  ),
+                // Filtro de Categoria
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(labelText: "Categoria"),
+                  value: _selectedCategoryId,
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text("Todas")),
+                    ..._categories.map(
+                      (c) => DropdownMenuItem<int>(
+                        value: c['id'],
+                        child: Text(
+                          c['title'],
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) => setState(() => _selectedCategoryId = val),
                 ),
-                ElevatedButton(
+
+                // Filtro de Gênero
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(labelText: "Gênero"),
+                  value: _selectedGenreId,
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text("Todos")),
+                    ..._genres.map(
+                      (g) => DropdownMenuItem<int>(
+                        value: g['id'],
+                        child: Text(g['name']),
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) => setState(() => _selectedGenreId = val),
+                ),
+
+                // Filtro de Posição (Só faz sentido se tiver categoria selecionada)
+                DropdownButtonFormField<int>(
+                  decoration: const InputDecoration(
+                    labelText: "Posição (Requer Categoria)",
+                  ),
+                  value: _selectedPosition,
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text("Qualquer")),
+                    DropdownMenuItem(value: 1, child: Text("1º Lugar")),
+                    DropdownMenuItem(value: 2, child: Text("2º Lugar")),
+                    DropdownMenuItem(value: 3, child: Text("3º Lugar")),
+                  ],
+                  onChanged: _selectedCategoryId == null
+                      ? null
+                      : (val) => setState(() => _selectedPosition = val),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
                   onPressed: _performSearch,
-                  child: Icon(Icons.search),
+                  icon: const Icon(Icons.search),
+                  label: const Text("Buscar"),
                 ),
               ],
             ),
           ),
+          const Divider(),
           Expanded(
-            child: ListView.builder(
-              itemCount: _results.length,
-              itemBuilder: (context, index) {
-                final item = _results[index];
-                return ListTile(
-                  leading: CircleAvatar(child: Text("${item['position']}º")),
-                  title: Text(item['game_name']),
-                  subtitle: Text(
-                    "Categoria: ${item['cat_title']} | Votos: ${item['votes']}",
+            child: _hasSearched && _searchResults.isEmpty
+                ? const Center(child: Text("Nenhum jogo encontrado."))
+                : ListView.builder(
+                    itemCount: _searchResults.length,
+                    itemBuilder: (context, index) {
+                      final game = _searchResults[index];
+                      return ListTile(
+                        title: Text(game['name']),
+                        subtitle: Text(
+                          game['description'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        leading: const Icon(Icons.videogame_asset),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),

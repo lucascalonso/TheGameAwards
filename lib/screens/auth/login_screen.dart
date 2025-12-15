@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
-// Os imports de dashboard e DbHelper não são mais necessários aqui
-// pois o main.dart gerencia a troca de tela e o Provider gerencia o banco.
+import '../../widgets/base_layout.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,7 +20,10 @@ class _LoginScreenState extends State<LoginScreen> {
     // Validação básica
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha email e senha"), backgroundColor: Colors.orange),
+        const SnackBar(
+          content: Text("Preencha email e senha"),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -57,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
-    return Scaffold(
+    return BaseLayout(
       appBar: AppBar(title: const Text("The Game Awards")),
       body: Center(
         child: SingleChildScrollView(

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../database/db_helper.dart';
 import '../../providers/auth_provider.dart';
-import '../../models/genre_model.dart';
+import '../../widgets/base_layout.dart';
 
 class GameForm extends StatefulWidget {
-  final Map<String, dynamic>? game; // Nulo para novo, preenchido para edição
+  final Map<String, dynamic>? game;
   const GameForm({super.key, this.game});
 
   @override
@@ -17,13 +17,10 @@ class _GameFormState extends State<GameForm> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _dateController = TextEditingController();
-  List<Genre> _allGenres = [];
-  final List<int> _selectedGenres = [];
 
   @override
   void initState() {
     super.initState();
-    _loadGenres();
     if (widget.game != null) {
       _nameController.text = widget.game!['name'];
       _descController.text = widget.game!['description'];
@@ -31,33 +28,25 @@ class _GameFormState extends State<GameForm> {
     }
   }
 
-  Future<void> _loadGenres() async {
-    final db = await DbHelper().database;
-    final res = await db.query('genre');
-    setState(() => _allGenres = res.map((m) => Genre.fromMap(m)).toList());
-  }
-
-  Future<void> _saveGame() async {
+  Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final db = await DbHelper().database;
 
-    Map<String, dynamic> gameData = {
-      'user_id': auth.user!.id,
+    final data = {
       'name': _nameController.text,
       'description': _descController.text,
       'release_date': _dateController.text,
+      'user_id': auth.user!.id, // Associa ao admin logado
     };
 
     if (widget.game == null) {
-      int gameId = await db.insert('game', gameData);
-      for (int gId in _selectedGenres) {
-        await db.insert('game_genre', {'game_id': gameId, 'genre_id': gId});
-      }
+      await db.insert('game', data);
     } else {
       await db.update(
         'game',
-        gameData,
+        data,
         where: 'id = ?',
         whereArgs: [widget.game!['id']],
       );
@@ -67,49 +56,35 @@ class _GameFormState extends State<GameForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BaseLayout(
       appBar: AppBar(
         title: Text(widget.game == null ? "Novo Jogo" : "Editar Jogo"),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: EdgeInsets.all(16),
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(labelText: "Nome do Jogo"),
-            ),
-            TextFormField(
-              controller: _descController,
-              decoration: InputDecoration(labelText: "Descrição"),
-              maxLines: 3,
-            ),
-            TextFormField(
-              controller: _dateController,
-              decoration: InputDecoration(
-                labelText: "Data de Lançamento (AAAA-MM-DD)",
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: "Nome"),
+                validator: (v) => v!.isEmpty ? "Obrigatório" : null,
               ),
-            ),
-            SizedBox(height: 20),
-            Text("Selecione os Gêneros:"),
-            Wrap(
-              children: _allGenres.map((genre) {
-                return FilterChip(
-                  label: Text(genre.name),
-                  selected: _selectedGenres.contains(genre.id),
-                  onSelected: (val) {
-                    setState(
-                      () => val
-                          ? _selectedGenres.add(genre.id!)
-                          : _selectedGenres.remove(genre.id),
-                    );
-                  },
-                );
-              }).toList(),
-            ),
-            ElevatedButton(onPressed: _saveGame, child: Text("Salvar Jogo")),
-          ],
+              TextFormField(
+                controller: _descController,
+                decoration: const InputDecoration(labelText: "Descrição"),
+              ),
+              TextFormField(
+                controller: _dateController,
+                decoration: const InputDecoration(
+                  labelText: "Data Lançamento (AAAA-MM-DD)",
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(onPressed: _save, child: const Text("Salvar")),
+            ],
+          ),
         ),
       ),
     );
