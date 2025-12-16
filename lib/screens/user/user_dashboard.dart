@@ -1,14 +1,13 @@
+import 'dart:ui'; // Para o efeito de vidro (Blur)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart'; // Para formatar datas se necessário
 
 import '../../database/db_helper.dart';
 import '../../models/category_model.dart';
 import '../../providers/auth_provider.dart';
-import '../../theme/app_theme.dart'; // Certifique-se que o AppTheme tem as cores definidas
+import '../../theme/app_theme.dart';
 import 'category_detail.dart';
 import 'search_screen.dart';
-// import '../../widgets/base_layout.dart'; // Vamos usar o Scaffold direto para controlar o design
 
 class UserDashboard extends StatefulWidget {
   const UserDashboard({super.key});
@@ -17,9 +16,24 @@ class UserDashboard extends StatefulWidget {
   _UserDashboardState createState() => _UserDashboardState();
 }
 
-class _UserDashboardState extends State<UserDashboard> {
+class _UserDashboardState extends State<UserDashboard> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Controlador para animações globais da tela, se necessário
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1));
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
   
-  // Lógica original mantida
+  // Lógica original de busca no DB
   Future<List<Category>> _getActiveCategories() async {
     final db = await DbHelper().database;
     final List<Map<String, dynamic>> maps = await db.query('category');
@@ -28,10 +42,9 @@ class _UserDashboardState extends State<UserDashboard> {
     for (var m in maps) {
       try {
         Category c = Category.fromMap(m);
-        // Lógica de data mantida conforme seu pedido (sempre adicionando para testes)
         activeCategories.add(c); 
       } catch (e) {
-        print("Erro ao converter: $e");
+        debugPrint("Erro ao converter: $e");
       }
     }
     return activeCategories;
@@ -40,43 +53,51 @@ class _UserDashboardState extends State<UserDashboard> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    final theme = Theme.of(context);
 
     return Scaffold(
-      // AppBar transparente para dar destaque ao conteúdo
-      appBar: AppBar(
-        title: Text(
-          "VOTAÇÃO",
-          style: theme.textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2.0,
-            color: AppTheme.tgaGold,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: AppTheme.tgaGold),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SearchScreen()),
+      extendBodyBehindAppBar: true, // Permite que o corpo passe por trás da AppBar
+      appBar: PreferredSize(
+        preferredSize: const Size(double.infinity, 60),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: AppBar(
+              title: const Text(
+                "THE GAME AWARDS",
+                style: TextStyle(
+                  fontFamily: 'Cinzel',
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2.0,
+                  color: AppTheme.tgaGold,
+                  fontSize: 18,
+                  shadows: [Shadow(color: Colors.black, blurRadius: 10)],
+                ),
+              ),
+              centerTitle: true,
+              backgroundColor: Colors.black.withOpacity(0.3),
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.white),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.search, color: AppTheme.tgaGold),
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const SearchScreen()),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
-      // Menu Lateral Estilizado
       drawer: _buildCustomDrawer(context, auth),
       
-      // Corpo com Fundo Gradiente (leve)
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0D0D0D), Color(0xFF1A1A1A)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0F0F0F), Color(0xFF181818), Color(0xFF050505)],
           ),
         ),
         child: FutureBuilder<List<Category>>(
@@ -91,12 +112,29 @@ class _UserDashboardState extends State<UserDashboard> {
             }
 
             final categories = snapshot.data!;
+            
+            // ListView com animação de entrada
             return ListView.separated(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 100, 16, 30), // Topo maior para AppBar
               itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              separatorBuilder: (_, __) => const SizedBox(height: 20),
               itemBuilder: (context, index) {
-                return _buildCategoryCard(context, categories[index]);
+                // Animação stagger (um item entra depois do outro)
+                return TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: Duration(milliseconds: 400 + (index * 100)), // Delay baseado no index
+                  curve: Curves.easeOutQuad,
+                  builder: (context, value, child) {
+                    return Transform.translate(
+                      offset: Offset(0, 50 * (1 - value)), // Vem de baixo para cima
+                      child: Opacity(
+                        opacity: value,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: CategoryCard(category: categories[index]),
+                );
               },
             );
           },
@@ -105,204 +143,287 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
-  // Widget do Card de Categoria
-  Widget _buildCategoryCard(BuildContext context, Category category) {
-    return GestureDetector(
-      onTap: () {
-        if (category.id != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CategoryDetail(
-                categoryId: category.id!,
-                categoryTitle: category.title,
-              ),
-            ),
-          );
-        }
-      },
-      child: Container(
-        height: 140,
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E1E), // Fundo do card
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white10), // Borda sutil
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.5),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            children: [
-              // Elemento Decorativo de Fundo (Troféu Gigante Opaco)
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(
-                  Icons.emoji_events,
-                  size: 150,
-                  color: Colors.white.withOpacity(0.03),
-                ),
-              ),
-              
-              // Barra lateral Dourada (Identidade Visual)
-              Container(
-                width: 6,
-                color: AppTheme.tgaGold,
-              ),
-
-              // Conteúdo do Card
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 16, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Badge de "VOTAÇÃO ABERTA"
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.tgaGold.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppTheme.tgaGold.withOpacity(0.5)),
-                      ),
-                      child: Text(
-                        "VOTAÇÃO ABERTA",
-                        style: TextStyle(
-                          color: AppTheme.tgaGold,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Título da Categoria
-                    Text(
-                      category.title.toUpperCase(),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Cinzel', // Ou a fonte padrão do tema
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 4),
-                    
-                    // Descrição curta
-                    Text(
-                      category.description ?? "Escolha o melhor nesta categoria.",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white54, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Ícone de Seta "Ir"
-              const Positioned(
-                right: 16,
-                top: 0,
-                bottom: 0,
-                child: Center(
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    color: AppTheme.tgaGold,
-                    size: 20,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Widget do Estado Vazio
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox, size: 80, color: Colors.white.withOpacity(0.2)),
+          Icon(Icons.inbox, size: 80, color: Colors.white.withOpacity(0.1)),
           const SizedBox(height: 16),
           const Text(
-            "Nenhuma categoria ativa no momento.",
-            style: TextStyle(color: Colors.white54),
+            "Nenhuma categoria ativa.",
+            style: TextStyle(color: Colors.white38),
           ),
         ],
       ),
     );
   }
 
-  // Drawer Customizado
+  // Drawer (Mantido clean, mas com ajustes de cor)
   Widget _buildCustomDrawer(BuildContext context, AuthProvider auth) {
     return Drawer(
-      backgroundColor: const Color(0xFF121212), // Fundo escuro
-      child: ListView(
-        padding: EdgeInsets.zero,
+      backgroundColor: const Color(0xFF101010),
+      child: Column(
         children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(
+          Container(
+            padding: const EdgeInsets.only(top: 60, bottom: 30, left: 20, right: 20),
+            decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF000000), Color(0xFF1E1E1E)],
-                begin: Alignment.bottomLeft,
-                end: Alignment.topRight,
+                colors: [Colors.black, Colors.grey[900]!],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
               ),
-              border: Border(bottom: BorderSide(color: AppTheme.tgaGold, width: 1)),
+              border: const Border(bottom: BorderSide(color: AppTheme.tgaGold, width: 0.5)),
             ),
+            width: double.infinity,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 CircleAvatar(
-                  radius: 30,
+                  radius: 35,
                   backgroundColor: AppTheme.tgaGold,
-                  child: const Icon(Icons.person, size: 35, color: Colors.black),
+                  child: Text(
+                    auth.user?.name.isNotEmpty == true ? auth.user!.name[0].toUpperCase() : "G",
+                    style: const TextStyle(fontSize: 30, color: Colors.black, fontWeight: FontWeight.bold),
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 15),
                 Text(
                   auth.isGuest ? "Visitante" : (auth.user?.name ?? "Usuário"),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 22,
+                    fontFamily: 'Cinzel',
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  auth.isGuest ? "Modo de visualização" : (auth.user?.email ?? ""),
+                  auth.isGuest ? "Apenas visualização" : (auth.user?.email ?? ""),
                   style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ],
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.emoji_events, color: Colors.white70),
-            title: const Text("Categorias", style: TextStyle(color: Colors.white)),
-            onTap: () => Navigator.pop(context), // Já estamos aqui
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            leading: const Icon(Icons.emoji_events, color: AppTheme.tgaGold),
+            title: const Text("Votação", style: TextStyle(color: Colors.white, fontSize: 16)),
+            onTap: () => Navigator.pop(context),
           ),
+          const Spacer(),
           const Divider(color: Colors.white10),
           ListTile(
-            leading: const Icon(Icons.logout, color: AppTheme.tgaError),
-            title: const Text("Sair da conta", style: TextStyle(color: AppTheme.tgaError)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            leading: const Icon(Icons.logout, color: Color(0xFFCF6679)),
+            title: const Text("Sair da conta", style: TextStyle(color: Color(0xFFCF6679), fontSize: 16)),
             onTap: () {
-              Navigator.pop(context); // Fecha drawer
-              auth.logout(); // O main.dart vai redirecionar para login
+              Navigator.pop(context);
+              auth.logout();
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+// --- WIDGET DO CARD DE CATEGORIA (Extraído e melhorado) ---
+class CategoryCard extends StatefulWidget {
+  final Category category;
+
+  const CategoryCard({super.key, required this.category});
+
+  @override
+  State<CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<CategoryCard> with SingleTickerProviderStateMixin {
+  bool _isHovered = false;
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    // Controlador para o efeito "Pulsar" do badge "LIVE"
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+      lowerBound: 0.5,
+      upperBound: 1.0,
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {
+          if (widget.category.id != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CategoryDetail(
+                  categoryId: widget.category.id!,
+                  categoryTitle: widget.category.title,
+                ),
+              ),
+            );
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 160,
+          transform: Matrix4.identity()..scale(_isHovered ? 1.02 : 1.0), // Zoom leve
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(16),
+            border: _isHovered 
+                ? Border.all(color: AppTheme.tgaGold.withOpacity(0.5), width: 1.5)
+                : Border.all(color: Colors.white10, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: _isHovered ? AppTheme.tgaGold.withOpacity(0.15) : Colors.black.withOpacity(0.5),
+                blurRadius: _isHovered ? 20 : 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                // 1. ÍCONE DECORATIVO GIGANTE (Fundo)
+                Positioned(
+                  right: -30,
+                  bottom: -30,
+                  child: Transform.rotate(
+                    angle: -0.2,
+                    child: Icon(
+                      Icons.emoji_events,
+                      size: 180,
+                      color: Colors.white.withOpacity(0.03),
+                    ),
+                  ),
+                ),
+                
+                // 2. GRADIENTE LATERAL (Para dar profundidade)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                  ),
+                ),
+
+                // 3. BARRA DE DESTAQUE DOURADA
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: _isHovered ? 8 : 4,
+                  height: double.infinity,
+                  color: AppTheme.tgaGold,
+                ),
+
+                // 4. CONTEÚDO
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Badge "VOTAÇÃO ABERTA" com ponto pulsante
+                      Row(
+                        children: [
+                          FadeTransition(
+                            opacity: _pulseController,
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.greenAccent, // Verde para indicar ativo
+                                shape: BoxShape.circle,
+                                boxShadow: [BoxShadow(color: Colors.greenAccent, blurRadius: 5)],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            "VOTAÇÃO ABERTA",
+                            style: TextStyle(
+                              color: AppTheme.tgaGold.withOpacity(0.9),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Título da Categoria
+                      Text(
+                        widget.category.title.toUpperCase(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Cinzel',
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          height: 1.1,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Descrição
+                      Text(
+                        widget.category.description ?? "Clique para ver os indicados.",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Colors.white54, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 5. BOTÃO "IR" (Seta)
+                Positioned(
+                  right: 20,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _isHovered ? AppTheme.tgaGold : Colors.white.withOpacity(0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.arrow_forward,
+                        color: _isHovered ? Colors.black : Colors.white54,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

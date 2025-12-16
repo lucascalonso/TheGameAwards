@@ -9,7 +9,7 @@ class TgaButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
-    this.isLoading = false,
+    this.isLoading = false, required IconData icon,
   });
 
   @override
