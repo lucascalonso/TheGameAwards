@@ -4,6 +4,7 @@ class Game {
   String name;
   String description;
   String releaseDate;
+  final String? imageUrl;
 
   Game({
     this.id,
@@ -11,6 +12,7 @@ class Game {
     required this.name,
     required this.description,
     required this.releaseDate,
+    required this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -30,6 +32,7 @@ class Game {
       name: map['name'],
       description: map['description'],
       releaseDate: map['release_date'],
+      imageUrl: map['image_url'],
     );
   }
 }

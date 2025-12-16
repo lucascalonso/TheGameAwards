@@ -16,10 +16,11 @@ class LoginScreen extends StatefulWidget {
   _LoginScreenState createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   // Focus nodes para animar as bordas dos inputs
   final FocusNode _emailFocus = FocusNode();
   final FocusNode _passFocus = FocusNode();
@@ -34,19 +35,25 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    
+
     // Configura animação de entrada
     _entryController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
 
-    _fadeAnimation = CurvedAnimation(parent: _entryController, curve: Curves.easeIn);
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.2), // Começa um pouco abaixo
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic));
+    _fadeAnimation = CurvedAnimation(
+      parent: _entryController,
+      curve: Curves.easeIn,
+    );
+
+    _slideAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 0.2), // Começa um pouco abaixo
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(parent: _entryController, curve: Curves.easeOutCubic),
+        );
 
     _entryController.forward(); // Inicia a animação
 
@@ -74,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     setState(() => _isLoading = true);
 
     // Pequeno delay artificial para ver o loading (opcional, remove sensação de bug se for mt rápido)
-    await Future.delayed(const Duration(milliseconds: 500)); 
+    await Future.delayed(const Duration(milliseconds: 500));
 
     if (!mounted) return;
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -128,33 +135,40 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       children: [
                         // --- LOGO ---
                         _buildLogo(),
-                        
+
                         const SizedBox(height: 40),
 
                         // --- CARD DE VIDRO ---
                         ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15), // Blur mais forte
+                            filter: ImageFilter.blur(
+                              sigmaX: 15,
+                              sigmaY: 15,
+                            ), // Blur mais forte
                             child: Container(
                               padding: const EdgeInsets.all(30),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.03), // Quase transparente
+                                color: Colors.white.withOpacity(
+                                  0.03,
+                                ), // Quase transparente
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.1),
+                                ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withOpacity(0.3),
                                     blurRadius: 20,
                                     spreadRadius: 5,
-                                  )
+                                  ),
                                 ],
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Text(
-                                    "BEM-VINDO DE VOLTA",
+                                    "",
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.8),
@@ -173,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     icon: Icons.alternate_email,
                                   ),
                                   const SizedBox(height: 16),
-                                  
+
                                   // Campo Senha
                                   _buildTextField(
                                     controller: _passwordController,
@@ -182,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     icon: Icons.lock_outline,
                                     isPassword: true,
                                   ),
-                                  
+
                                   const SizedBox(height: 30),
 
                                   // Botão LOGIN
@@ -227,11 +241,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 color: AppTheme.tgaGold.withOpacity(0.4),
                 blurRadius: 60,
                 spreadRadius: -5,
-              )
+              ),
             ],
-            border: Border.all(color: AppTheme.tgaGold.withOpacity(0.3), width: 2),
+            border: Border.all(
+              color: AppTheme.tgaGold.withOpacity(0.3),
+              width: 2,
+            ),
           ),
-          child: const Icon(Icons.emoji_events, size: 60, color: AppTheme.tgaGold),
+          child: const Icon(
+            Icons.emoji_events,
+            size: 60,
+            color: AppTheme.tgaGold,
+          ),
         ),
         const SizedBox(height: 20),
         const Text(
@@ -242,7 +263,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             letterSpacing: 4.0,
             fontSize: 24,
             color: Colors.white,
-            shadows: [Shadow(color: Colors.black, blurRadius: 10, offset: Offset(0, 4))],
+            shadows: [
+              Shadow(color: Colors.black, blurRadius: 10, offset: Offset(0, 4)),
+            ],
           ),
           textAlign: TextAlign.center,
         ),
@@ -258,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     bool isPassword = false,
   }) {
     final isFocused = focusNode.hasFocus;
-    
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       decoration: BoxDecoration(
@@ -266,11 +289,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           // Borda Dourada se focado, cinza transparente se não
-          color: isFocused ? AppTheme.tgaGold : Colors.white10, 
+          color: isFocused ? AppTheme.tgaGold : Colors.white10,
           width: 1.5,
         ),
-        boxShadow: isFocused 
-            ? [BoxShadow(color: AppTheme.tgaGold.withOpacity(0.1), blurRadius: 8)] 
+        boxShadow: isFocused
+            ? [
+                BoxShadow(
+                  color: AppTheme.tgaGold.withOpacity(0.1),
+                  blurRadius: 8,
+                ),
+              ]
             : [],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -281,10 +309,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         style: const TextStyle(color: Colors.white),
         cursorColor: AppTheme.tgaGold,
         decoration: InputDecoration(
-          icon: Icon(icon, color: isFocused ? AppTheme.tgaGold : Colors.white38),
+          icon: Icon(
+            icon,
+            color: isFocused ? AppTheme.tgaGold : Colors.white38,
+          ),
           border: InputBorder.none,
           labelText: label,
-          labelStyle: TextStyle(color: isFocused ? AppTheme.tgaGold : Colors.white38),
+          labelStyle: TextStyle(
+            color: isFocused ? AppTheme.tgaGold : Colors.white38,
+          ),
         ),
       ),
     );
@@ -296,7 +329,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       children: [
         TextButton(
           onPressed: () {
-             Navigator.push(
+            Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => RegisterScreen()),
             );
@@ -315,10 +348,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           onPressed: () => auth.loginAsGuest(),
           child: const Text(
             "VISITANTE",
-            style: TextStyle(
-              color: Colors.white54,
-              letterSpacing: 1.0,
-            ),
+            style: TextStyle(color: Colors.white54, letterSpacing: 1.0),
           ),
         ),
       ],
@@ -334,7 +364,8 @@ class AnimatedBackground extends StatefulWidget {
   State<AnimatedBackground> createState() => _AnimatedBackgroundState();
 }
 
-class _AnimatedBackgroundState extends State<AnimatedBackground> with SingleTickerProviderStateMixin {
+class _AnimatedBackgroundState extends State<AnimatedBackground>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   final List<Particle> _particles = [];
   final Random _random = Random();
@@ -347,19 +378,21 @@ class _AnimatedBackgroundState extends State<AnimatedBackground> with SingleTick
       _particles.add(Particle(_random));
     }
 
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 10))
-      ..addListener(() {
-        setState(() {
-          // Atualiza posição de cada partícula
-          for (var p in _particles) {
-            p.update();
-            if (p.y < -0.1) { // Se saiu da tela por cima, recomeça em baixo
-              p.reset(_random);
-            }
-          }
-        });
-      })
-      ..repeat();
+    _controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 10))
+          ..addListener(() {
+            setState(() {
+              // Atualiza posição de cada partícula
+              for (var p in _particles) {
+                p.update();
+                if (p.y < -0.1) {
+                  // Se saiu da tela por cima, recomeça em baixo
+                  p.reset(_random);
+                }
+              }
+            });
+          })
+          ..repeat();
   }
 
   @override

@@ -12,10 +12,11 @@ class AdminDashboard extends StatefulWidget {
   _AdminDashboardState createState() => _AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProviderStateMixin {
+class _AdminDashboardState extends State<AdminDashboard>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final DbHelper _dbHelper = DbHelper();
-  
+
   // Listas para armazenar os dados do banco
   List<Map<String, dynamic>> _games = [];
   List<Map<String, dynamic>> _categories = [];
@@ -32,7 +33,7 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
   void _refreshData() async {
     setState(() => _isLoading = true);
     final db = await _dbHelper.database;
-    
+
     // Busca tudo
     final gamesData = await db.query('game');
     final categoriesData = await db.query('category');
@@ -48,14 +49,17 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
   Future<void> _deleteItem(String table, int id) async {
     final db = await _dbHelper.database;
     await db.delete(table, where: 'id = ?', whereArgs: [id]);
-    
+
     // Se deletar um jogo, também removemos as vinculações dele nas categorias
     if (table == 'game') {
       await db.delete('category_game', where: 'game_id = ?', whereArgs: [id]);
     }
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Item removido"), backgroundColor: AppTheme.tgaError),
+      const SnackBar(
+        content: Text("Item removido"),
+        backgroundColor: AppTheme.tgaError,
+      ),
     );
     _refreshData();
   }
@@ -88,13 +92,12 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.tgaGold))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.tgaGold),
+            )
           : TabBarView(
               controller: _tabController,
-              children: [
-                _buildGamesTab(),
-                _buildCategoriesTab(),
-              ],
+              children: [_buildGamesTab(), _buildCategoriesTab()],
             ),
     );
   }
@@ -111,7 +114,10 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
                 // Exibe a miniatura da imagem
                 leading: Container(
                   width: 50,
@@ -119,20 +125,33 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
                   decoration: BoxDecoration(
                     color: Colors.black26,
                     borderRadius: BorderRadius.circular(4),
-                    image: (game['image_url'] != null && game['image_url'].toString().isNotEmpty)
+                    image:
+                        (game['image_url'] != null &&
+                            game['image_url'].toString().isNotEmpty)
                         ? DecorationImage(
-                            image: NetworkImage(game['image_url']),
+                            image: AssetImage(
+                              game['image_url'],
+                            ), // <--- MUDOU AQUI DE NetworkImage PARA AssetImage
                             fit: BoxFit.cover,
                           )
                         : null,
                   ),
-                  child: (game['image_url'] == null || game['image_url'].toString().isEmpty)
-                      ? const Icon(Icons.image_not_supported, size: 20, color: Colors.white24)
+                  child:
+                      (game['image_url'] == null ||
+                          game['image_url'].toString().isEmpty)
+                      ? const Icon(
+                          Icons.image_not_supported,
+                          size: 20,
+                          color: Colors.white24,
+                        )
                       : null,
                 ),
                 title: Text(
                   game['name'],
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.tgaGold),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.tgaGold,
+                  ),
                 ),
                 subtitle: Text(
                   game['description'] ?? "Sem descrição",
@@ -162,7 +181,13 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
           child: FloatingActionButton.extended(
             backgroundColor: AppTheme.tgaGold,
             icon: const Icon(Icons.add, color: Colors.black),
-            label: const Text("NOVO JOGO", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            label: const Text(
+              "NOVO JOGO",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             onPressed: () => _showGameDialog(),
           ),
         ),
@@ -182,8 +207,15 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
-                leading: const Icon(Icons.emoji_events, color: AppTheme.tgaGold, size: 30),
-                title: Text(cat['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                leading: const Icon(
+                  Icons.emoji_events,
+                  color: AppTheme.tgaGold,
+                  size: 30,
+                ),
+                title: Text(
+                  cat['title'],
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 subtitle: Text(cat['description'] ?? ""),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -210,7 +242,13 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
           child: FloatingActionButton.extended(
             backgroundColor: AppTheme.tgaGold,
             icon: const Icon(Icons.add, color: Colors.black),
-            label: const Text("NOVA CATEGORIA", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            label: const Text(
+              "NOVA CATEGORIA",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             onPressed: () => _showCategoryDialog(),
           ),
         ),
@@ -219,74 +257,86 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
   }
 
   // --- DIALOGS (FORMULÁRIOS) ---
-
   // 1. Criar/Editar Jogo
   void _showGameDialog({Map<String, dynamic>? game}) {
-    final nameCtrl = TextEditingController(text: game?['name']);
-    final descCtrl = TextEditingController(text: game?['description']);
-    final imgCtrl = TextEditingController(text: game?['image_url']); // CAMPO NOVO
+    final nameController = TextEditingController(text: game?['name'] ?? '');
+    final descController = TextEditingController(
+      text: game?['description'] ?? '',
+    );
+    final imageController = TextEditingController(
+      text: game?['image_url'] ?? '',
+    );
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.tgaSurface,
-        title: Text(game == null ? "Adicionar Jogo" : "Editar Jogo", style: const TextStyle(color: AppTheme.tgaGold)),
+        backgroundColor: const Color(0xFF1E1E1E),
+        title: Text(
+          game == null ? 'Novo Jogo' : 'Editar Jogo',
+          style: const TextStyle(color: AppTheme.tgaGold),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: nameCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: "Nome do Jogo"),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: descCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: "Desenvolvedora / Descrição"),
-              ),
-              const SizedBox(height: 10),
-              // CAMPO DA IMAGEM
-              TextField(
-                controller: imgCtrl,
+                controller: nameController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: "URL da Imagem (Capa)",
-                  hintText: "https://...",
-                  prefixIcon: Icon(Icons.image),
+                  labelText: 'Nome',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
                 ),
               ),
-              const SizedBox(height: 5),
-              const Text(
-                "Dica: Copie o link da imagem (Poster Vertical) do Google.",
-                style: TextStyle(fontSize: 10, color: Colors.white54),
+              const SizedBox(height: 8),
+              TextField(
+                controller: descController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Descrição',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: imageController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Caminho do Asset',
+                  labelStyle: TextStyle(color: Colors.white70),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24),
+                  ),
+                ),
               ),
             ],
           ),
         ),
         actions: [
-          TextButton(child: const Text("Cancelar"), onPressed: () => Navigator.pop(context)),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(color: Colors.white54),
+            ),
+          ),
           ElevatedButton(
-            child: const Text("SALVAR"),
-            onPressed: () async {
-              if (nameCtrl.text.isNotEmpty) {
-                final db = await _dbHelper.database;
-                final data = {
-                  'name': nameCtrl.text,
-                  'description': descCtrl.text,
-                  'image_url': imgCtrl.text,
-                };
-
-                if (game == null) {
-                  await db.insert('game', data);
-                } else {
-                  await db.update('game', data, where: 'id = ?', whereArgs: [game['id']]);
-                }
-                _refreshData();
-                if (mounted) Navigator.pop(context);
-              }
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.tgaGold),
+            onPressed: () {
+              _saveGame(
+                id: game?['id'],
+                name: nameController.text,
+                description: descController.text,
+                imageUrl: imageController.text,
+              );
+              Navigator.pop(context);
             },
+            child: const Text('Salvar', style: TextStyle(color: Colors.black)),
           ),
         ],
       ),
@@ -302,14 +352,19 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppTheme.tgaSurface,
-        title: const Text("Nova Categoria", style: TextStyle(color: AppTheme.tgaGold)),
+        title: const Text(
+          "Nova Categoria",
+          style: TextStyle(color: AppTheme.tgaGold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleCtrl,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: "Título (ex: JOGO DO ANO)"),
+              decoration: const InputDecoration(
+                labelText: "Título (ex: JOGO DO ANO)",
+              ),
             ),
             const SizedBox(height: 10),
             TextField(
@@ -320,7 +375,10 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
           ],
         ),
         actions: [
-          TextButton(child: const Text("Cancelar"), onPressed: () => Navigator.pop(context)),
+          TextButton(
+            child: const Text("Cancelar"),
+            onPressed: () => Navigator.pop(context),
+          ),
           ElevatedButton(
             child: const Text("CRIAR"),
             onPressed: () async {
@@ -330,7 +388,9 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
                 await db.insert('category', {
                   'title': titleCtrl.text,
                   'description': descCtrl.text,
-                  'date': DateTime.now().add(const Duration(days: 30)).toIso8601String(), 
+                  'date': DateTime.now()
+                      .add(const Duration(days: 30))
+                      .toIso8601String(),
                 });
                 _refreshData();
                 if (mounted) Navigator.pop(context);
@@ -342,19 +402,19 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
     );
   }
 
- void _showLinkGamesDialog(Map<String, dynamic> category) async {
+  void _showLinkGamesDialog(Map<String, dynamic> category) async {
     final db = await _dbHelper.database;
-    
+
     // Buscar todos os jogos
     final allGames = await db.query('game');
-    
+
     // Buscar jogos já vinculados a esta categoria
     final linkedResult = await db.query(
       'category_game',
       where: 'category_id = ?',
       whereArgs: [category['id']],
     );
-    
+
     // Convertendo explicitamente para int para evitar erros
     final linkedIds = linkedResult.map((e) => e['game_id'] as int).toList();
 
@@ -371,14 +431,16 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
             backgroundColor: AppTheme.tgaSurface,
             title: Text(
               // Correção aqui também para o título da categoria
-              "Indicados: ${category['title']}", 
-              style: const TextStyle(fontSize: 16, color: AppTheme.tgaGold)
+              "Indicados: ${category['title']}",
+              style: const TextStyle(fontSize: 16, color: AppTheme.tgaGold),
             ),
             content: SizedBox(
               width: double.maxFinite,
               height: 300,
-              child: allGames.isEmpty 
-                  ? const Center(child: Text("Cadastre jogos primeiro na outra aba!"))
+              child: allGames.isEmpty
+                  ? const Center(
+                      child: Text("Cadastre jogos primeiro na outra aba!"),
+                    )
                   : ListView.builder(
                       itemCount: allGames.length,
                       itemBuilder: (context, index) {
@@ -386,12 +448,12 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
                         // Correção 1: Garantindo que id é int
                         final int gameId = game['id'] as int;
                         final isSelected = selectedIds.contains(gameId);
-                        
+
                         return CheckboxListTile(
                           // Correção 2: Garantindo que name é String
                           title: Text(
-                            game['name'] as String, 
-                            style: const TextStyle(color: Colors.white)
+                            game['name'] as String,
+                            style: const TextStyle(color: Colors.white),
                           ),
                           activeColor: AppTheme.tgaGold,
                           checkColor: Colors.black,
@@ -410,28 +472,35 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
                     ),
             ),
             actions: [
-              TextButton(child: const Text("Cancelar"), onPressed: () => Navigator.pop(context)),
+              TextButton(
+                child: const Text("Cancelar"),
+                onPressed: () => Navigator.pop(context),
+              ),
               ElevatedButton(
                 child: const Text("SALVAR INDICADOS"),
                 onPressed: () async {
                   // 1. Limpar vinculações antigas dessa categoria
-                  await db.delete('category_game', where: 'category_id = ?', whereArgs: [category['id']]);
-                  
+                  await db.delete(
+                    'category_game',
+                    where: 'category_id = ?',
+                    whereArgs: [category['id']],
+                  );
+
                   // 2. Inserir novas
                   for (int idToSave in selectedIds) {
                     await db.insert('category_game', {
                       'category_id': category['id'],
-                      'game_id': idToSave
+                      'game_id': idToSave,
                     });
                   }
-                  
+
                   Navigator.pop(context); // Fecha o dialog
-                  
+
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Lista de indicados atualizada!"), 
-                        backgroundColor: AppTheme.tgaGold
+                        content: Text("Lista de indicados atualizada!"),
+                        backgroundColor: AppTheme.tgaGold,
                       ),
                     );
                   }
@@ -442,5 +511,29 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
         },
       ),
     );
+  }
+
+  Future<void> _saveGame({
+    int? id,
+    required String name,
+    required String description,
+    required String imageUrl,
+  }) async {
+    if (name.isEmpty) return;
+
+    final db = await _dbHelper.database;
+    final data = {
+      'name': name,
+      'description': description,
+      'image_url': imageUrl,
+    };
+
+    if (id == null) {
+      await db.insert('game', data);
+    } else {
+      await db.update('game', data, where: 'id = ?', whereArgs: [id]);
+    }
+
+    _refreshData();
   }
 }

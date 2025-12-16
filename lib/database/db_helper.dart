@@ -26,7 +26,7 @@ class DbHelper {
     String path = join(await getDatabasesPath(), 'award.db');
 
     //só pra limpar o db dessa vez, depois comentar (Lucas)
-    //await deleteDatabase(path);
+    await deleteDatabase(path);
 
     return await openDatabase(
       path,
@@ -55,6 +55,7 @@ class DbHelper {
             name VARCHAR NOT NULL UNIQUE,
             description TEXT NOT NULL,
             release_date VARCHAR NOT NULL,
+            image_url TEXT,
             FOREIGN KEY(user_id) REFERENCES user(id)
           )''');
 
@@ -126,22 +127,22 @@ class DbHelper {
 
         // Games
         await db.execute(
-          "INSERT INTO game(user_id, name, description, release_date) VALUES(1, 'Clair Obscur: Expedition 33', 'Once a year, the Paintress wakes and paints upon her monolith. Paints her cursed number. And everyone past that age turns to smoke and fades away. Year by year, that number ticks down and more of us are erased. Tomorrow she’ll wake and paint “33.” And tomorrow we depart on our final mission - Destroy the Paintress, so she can never paint death again. We are Expedition 33.Clair Obscur: Expedition 33 is a ground-breaking turn-based RPG with unique real-time mechanics, making battles more immersive and addictive than ever. Explore a fantasy world inspired by Belle Époque France in which you battle devastating enemies.', '2025-04-24');",
+          "INSERT INTO game(user_id, name, description, release_date,image_url) VALUES(1, 'Clair Obscur: Expedition 33', 'Once a year, the Paintress wakes and paints upon her monolith. Paints her cursed number. And everyone past that age turns to smoke and fades away. Year by year, that number ticks down and more of us are erased. Tomorrow she’ll wake and paint “33.” And tomorrow we depart on our final mission - Destroy the Paintress, so she can never paint death again. We are Expedition 33.Clair Obscur: Expedition 33 is a ground-breaking turn-based RPG with unique real-time mechanics, making battles more immersive and addictive than ever. Explore a fantasy world inspired by Belle Époque France in which you battle devastating enemies.', '2025-04-24','assets/images/expedition33.jpg');",
         );
         await db.execute(
-          "INSERT INTO game(user_id, name, description, release_date) VALUES(1, 'Hades 2', 'The first-ever sequel from Supergiant Games builds on the best aspects of the original god-like rogue-like dungeon crawler in an all-new, action-packed, endlessly replayable experience rooted in the Underworld of Greek myth and its deep connections to the dawn of witchcraft.', '2025-09-25');",
+          "INSERT INTO game(user_id, name, description, release_date,image_url) VALUES(1, 'Hades 2', 'The first-ever sequel from Supergiant Games builds on the best aspects of the original god-like rogue-like dungeon crawler in an all-new, action-packed, endlessly replayable experience rooted in the Underworld of Greek myth and its deep connections to the dawn of witchcraft.', '2025-09-25','assets/images/hades2.jpeg');",
         );
         await db.execute(
-          "INSERT INTO game(user_id, name, description, release_date) VALUES(2, 'Hollow Knight: Silksong', 'As the lethal hunter Hornet, adventure through a kingdom ruled by silk and song! Captured and taken to this unfamiliar world, prepare to battle mighty foes and solve ancient mysteries as you ascend on a deadly pilgrimage to the kingdom’s peak.Hollow Knight: Silksong is the epic sequel to Hollow Knight, the award winning action-adventure. Journey to all-new lands, discover new powers, battle vast hordes of bugs and beasts and uncover secrets tied to your nature and your past. ', '2025-09-04');",
+          "INSERT INTO game(user_id, name, description, release_date,image_url) VALUES(2, 'Hollow Knight: Silksong', 'As the lethal hunter Hornet, adventure through a kingdom ruled by silk and song! Captured and taken to this unfamiliar world, prepare to battle mighty foes and solve ancient mysteries as you ascend on a deadly pilgrimage to the kingdom’s peak.Hollow Knight: Silksong is the epic sequel to Hollow Knight, the award winning action-adventure. Journey to all-new lands, discover new powers, battle vast hordes of bugs and beasts and uncover secrets tied to your nature and your past. ', '2025-09-04','assets/images/silksong.JPG');",
         );
         await db.execute(
-          "INSERT INTO game(user_id, name, description, release_date) VALUES(3, 'Death Stranding 2: On the Beach', 'Com companheiros ao seu lado, Sam inicia uma nova jornada para salvar a humanidade da extinção.Junte-se a eles na travessia desse mundo problemático repleto de inimigos sobrenaturais, obstáculos e uma questão inquietante: deveríamos ter nos conectado?Hideo Kojima, o lendário designer de jogos, muda o mundo mais uma vez.', '2025-06-26');",
+          "INSERT INTO game(user_id, name, description, release_date,image_url) VALUES(3, 'Death Stranding 2: On the Beach', 'Com companheiros ao seu lado, Sam inicia uma nova jornada para salvar a humanidade da extinção.Junte-se a eles na travessia desse mundo problemático repleto de inimigos sobrenaturais, obstáculos e uma questão inquietante: deveríamos ter nos conectado?Hideo Kojima, o lendário designer de jogos, muda o mundo mais uma vez.', '2025-06-26','assets/images/deathstranding.jpg');",
         );
         await db.execute(
-          "INSERT INTO game(user_id, name, description, release_date) VALUES(3, 'Donkey Kong Bananza', 'Donkey Kong Bananza é um jogo eletrônico de plataforma desenvolvido e publicado pela Nintendo para o Nintendo Switch 2. O jogador controla o gorila Donkey Kong, que se aventura no subsolo com a jovem Pauline para recuperar artefatos conhecido como Cristais de Banândio de um grupo de macacos vilões.', '2025-07-17');",
+          "INSERT INTO game(user_id, name, description, release_date,image_url) VALUES(3, 'Donkey Kong Bananza', 'Donkey Kong Bananza é um jogo eletrônico de plataforma desenvolvido e publicado pela Nintendo para o Nintendo Switch 2. O jogador controla o gorila Donkey Kong, que se aventura no subsolo com a jovem Pauline para recuperar artefatos conhecido como Cristais de Banândio de um grupo de macacos vilões.', '2025-07-17','assets/images/dkbananza.jpg');",
         );
         await db.execute(
-          "INSERT INTO game(user_id, name, description, release_date) VALUES(3, 'Kingdom Come: Deliverance II', 'Kingdom Come: Deliverance II é um RPG de ação desenvolvido pela Warhorse Studios e publicado pela Deep Silver. Sequência de Kingdom Come: Deliverance, o jogo foi lançado para PlayStation 5, Windows e Xbox Series X/S no dia 4 de fevereiro de 2025', '2025-02-04');",
+          "INSERT INTO game(user_id, name, description, release_date,image_url) VALUES(3, 'Kingdom Come: Deliverance II', 'Kingdom Come: Deliverance II é um RPG de ação desenvolvido pela Warhorse Studios e publicado pela Deep Silver. Sequência de Kingdom Come: Deliverance, o jogo foi lançado para PlayStation 5, Windows e Xbox Series X/S no dia 4 de fevereiro de 2025', '2025-02-04','assets/images/kingdomcome.png');",
         );
 
         // Game Genres

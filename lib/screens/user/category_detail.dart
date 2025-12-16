@@ -79,11 +79,14 @@ class _CategoryDetailState extends State<CategoryDetail> {
 
   Future<void> _handleVote(int gameId) async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
-    
+
     if (auth.isGuest) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Faça login para votar!", style: TextStyle(color: Colors.white)),
+          content: const Text(
+            "Faça login para votar!",
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: Colors.redAccent.withOpacity(0.8),
           behavior: SnackBarBehavior.floating,
         ),
@@ -121,7 +124,7 @@ class _CategoryDetailState extends State<CategoryDetail> {
           });
         }
         setState(() => _currentVoteGameId = gameId);
-        
+
         // Feedback visual de sucesso
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -160,7 +163,9 @@ class _CategoryDetailState extends State<CategoryDetail> {
                 ),
               ),
               centerTitle: true,
-              backgroundColor: Colors.black.withOpacity(0.4), // Semi-transparente
+              backgroundColor: Colors.black.withOpacity(
+                0.4,
+              ), // Semi-transparente
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
             ),
@@ -173,52 +178,51 @@ class _CategoryDetailState extends State<CategoryDetail> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF121212), 
-              Color(0xFF000000)
-            ],
+            colors: [Color(0xFF121212), Color(0xFF000000)],
           ),
         ),
         child: _isLoading
-            ? const Center(child: CircularProgressIndicator(color: AppTheme.tgaGold))
+            ? const Center(
+                child: CircularProgressIndicator(color: AppTheme.tgaGold),
+              )
             : _games.isEmpty
-                ? _buildEmptyState()
-                : LayoutBuilder(
-                    builder: (context, constraints) {
-                      // LÓGICA DE RESPONSIVIDADE
-                      // Define quantas colunas baseado na largura da tela
-                      int crossAxisCount = 2; // Celular (padrão)
-                      if (constraints.maxWidth > 1200) {
-                        crossAxisCount = 5; // Desktop Grande
-                      } else if (constraints.maxWidth > 900) {
-                        crossAxisCount = 4; // Desktop/Laptop
-                      } else if (constraints.maxWidth > 600) {
-                        crossAxisCount = 3; // Tablet
-                      }
+            ? _buildEmptyState()
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  // LÓGICA DE RESPONSIVIDADE
+                  // Define quantas colunas baseado na largura da tela
+                  int crossAxisCount = 2; // Celular (padrão)
+                  if (constraints.maxWidth > 1200) {
+                    crossAxisCount = 5; // Desktop Grande
+                  } else if (constraints.maxWidth > 900) {
+                    crossAxisCount = 4; // Desktop/Laptop
+                  } else if (constraints.maxWidth > 600) {
+                    crossAxisCount = 3; // Tablet
+                  }
 
-                      return GridView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.fromLTRB(16, 100, 16, 30),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          childAspectRatio: 0.58, // Proporção Poster
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 24,
-                        ),
-                        itemCount: _games.length,
-                        itemBuilder: (context, index) {
-                          final game = _games[index];
-                          final isSelected = _currentVoteGameId == game['id'];
-                          
-                          return GameCard(
-                            game: game,
-                            isSelected: isSelected,
-                            onTap: () => _handleVote(game['id']),
-                          );
-                        },
+                  return GridView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.fromLTRB(16, 100, 16, 30),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      childAspectRatio: 0.58, // Proporção Poster
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 24,
+                    ),
+                    itemCount: _games.length,
+                    itemBuilder: (context, index) {
+                      final game = _games[index];
+                      final isSelected = _currentVoteGameId == game['id'];
+
+                      return GameCard(
+                        game: game,
+                        isSelected: isSelected,
+                        onTap: () => _handleVote(game['id']),
                       );
                     },
-                  ),
+                  );
+                },
+              ),
       ),
     );
   }
@@ -228,7 +232,11 @@ class _CategoryDetailState extends State<CategoryDetail> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.sports_esports, size: 60, color: Colors.white.withOpacity(0.2)),
+          Icon(
+            Icons.sports_esports,
+            size: 60,
+            color: Colors.white.withOpacity(0.2),
+          ),
           const SizedBox(height: 16),
           const Text(
             "Nenhum jogo indicado nesta categoria.",
@@ -257,7 +265,8 @@ class GameCard extends StatefulWidget {
   State<GameCard> createState() => _GameCardState();
 }
 
-class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin {
+class _GameCardState extends State<GameCard>
+    with SingleTickerProviderStateMixin {
   bool _isHovered = false;
   // Adicionei animação de escala para ficar suave
   late AnimationController _controller;
@@ -270,9 +279,10 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
       vsync: this,
       duration: const Duration(milliseconds: 200),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -294,7 +304,8 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     final String? imageUrl = widget.game['image_url'];
-    final String description = widget.game['description'] ?? 'Sem descrição disponível.';
+    final String description =
+        widget.game['description'] ?? 'Sem descrição disponível.';
 
     return MouseRegion(
       onEnter: _onEnter,
@@ -311,18 +322,18 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
               // Borda: Se selecionado = Dourado. Se Hover = Branco fraco. Se normal = Transparente
               border: widget.isSelected
                   ? Border.all(color: AppTheme.tgaGold, width: 3)
-                  : _isHovered 
-                      ? Border.all(color: Colors.white24, width: 1)
-                      : Border.all(color: Colors.transparent),
+                  : _isHovered
+                  ? Border.all(color: Colors.white24, width: 1)
+                  : Border.all(color: Colors.transparent),
               boxShadow: [
                 // Sombra dinâmica
                 BoxShadow(
-                  color: widget.isSelected 
-                      ? AppTheme.tgaGold.withOpacity(0.3) 
+                  color: widget.isSelected
+                      ? AppTheme.tgaGold.withOpacity(0.3)
                       : Colors.black.withOpacity(0.5),
                   blurRadius: _isHovered ? 20 : 10, // Sombra cresce no hover
                   offset: const Offset(0, 8),
-                )
+                ),
               ],
             ),
             child: ClipRRect(
@@ -350,8 +361,13 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
                     duration: const Duration(milliseconds: 300),
                     opacity: _isHovered ? 1.0 : 0.0,
                     child: Container(
-                      color: Colors.black.withOpacity(0.85), // Fundo escuro fosco
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      color: Colors.black.withOpacity(
+                        0.85,
+                      ), // Fundo escuro fosco
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -381,16 +397,23 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
                           ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               border: Border.all(color: Colors.white30),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
                               "CLIQUE PARA VOTAR",
-                              style: TextStyle(color: Colors.white, fontSize: 8, letterSpacing: 1),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 8,
+                                letterSpacing: 1,
+                              ),
                             ),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -412,10 +435,19 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: AppTheme.tgaGold,
-                                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    blurRadius: 4,
+                                  ),
+                                ],
                               ),
                               padding: const EdgeInsets.all(6),
-                              child: const Icon(Icons.check, size: 20, color: Colors.black),
+                              child: const Icon(
+                                Icons.check,
+                                size: 20,
+                                color: Colors.black,
+                              ),
                             ),
                           );
                         },
@@ -437,10 +469,14 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: widget.isSelected ? AppTheme.tgaGold : Colors.white,
+                              color: widget.isSelected
+                                  ? AppTheme.tgaGold
+                                  : Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
-                              shadows: const [Shadow(color: Colors.black, blurRadius: 4)],
+                              shadows: const [
+                                Shadow(color: Colors.black, blurRadius: 4),
+                              ],
                             ),
                           ),
                         ],
@@ -456,11 +492,11 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
   }
 
   Widget _buildImageContent(String? url) {
-    if (url != null && url.isNotEmpty && url.startsWith('http')) {
-      return Image.network(
+    if (url != null && url.isNotEmpty) {
+      return Image.asset(
         url,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _placeholder(),
+        errorBuilder: (context, error, stackTrace) => _placeholder(),
       );
     }
     return _placeholder();
@@ -472,7 +508,11 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.image_not_supported, size: 30, color: Colors.white.withOpacity(0.1)),
+          Icon(
+            Icons.image_not_supported,
+            size: 30,
+            color: Colors.white.withOpacity(0.1),
+          ),
           const SizedBox(height: 4),
           Text(
             "TGA",
@@ -482,7 +522,7 @@ class _GameCardState extends State<GameCard> with SingleTickerProviderStateMixin
               fontWeight: FontWeight.bold,
               letterSpacing: 1.5,
             ),
-          )
+          ),
         ],
       ),
     );
